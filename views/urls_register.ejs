@@ -1,3 +1,7 @@
+<!-- When we visit http://localhost:8080/register, we should now see the registration
+form. If you try to submit the form, you should receive a 404 error, since we
+haven't created a POST /register route ye -->
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -13,8 +17,9 @@
     <title>Register</title>
   </head>
   <body>
+    <%- include('partials/_header') %>
     <div style="margin: 1em;">
-      <form method="POST" action="/urls/register">
+      <form method="POST" action="/register">
         <label for="email">Email Address:</label><br />
         <input
           type="email"
@@ -27,7 +32,7 @@
           name="password"
           placeholder="Type Password"
         /><br />
-        <button class="btn btn-primary" type="submit" value="Submit">
+        <button class="btn btn-primary" type="submit">
           Submit
         </button>
       </form>
