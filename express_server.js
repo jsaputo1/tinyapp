@@ -142,6 +142,17 @@ app.post("/logout", (req, res) => {
 
 //Register
 app.post("/register", (req, res) => {
+  if (req.body.password.length < 1) {
+    res.send("Error: 400. Your password is not long enough");
+    return;
+  }
+  for (let user in users) {
+    let id = user;
+    if (users[id].email === req.body.email) {
+      res.send("Error: 400. Your e-mail is already registered");
+      return;
+    }
+  }
   const id = generateRandomString();
   users[id] = {
     username: id,
