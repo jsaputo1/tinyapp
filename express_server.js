@@ -3,6 +3,8 @@ const app = express();
 const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
 
+let name = "test";
+
 const generateRandomString = () => {
   return Math.floor((1 + Math.random()) * 0x1000000)
     .toString(16)
@@ -14,13 +16,16 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
-//Middleware to use "req.body"
+//Middleware to use body parser
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
-
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+//Middleware to use cookie parser
+var cookieParser = require("cookie-parser");
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -36,18 +41,26 @@ app.get("/", (req, res) => {
 
 //Index page
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  let templateVars = {
+    username: req.cookies["username"],
+    urls: urlDatabase,
+  };
   res.render("urls_index", templateVars);
 });
 
 //Page to add new
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let templateVars = {
+    username: req.cookies["username"],
+    urls: urlDatabase,
+  };
+  res.render("urls_new", templateVars);
 });
 
 //Individual URL page
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
+    username: req.cookies["username"],
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
   };
