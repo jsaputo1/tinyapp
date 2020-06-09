@@ -57,6 +57,11 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
+//Registration page
+app.get("/register", (req, res) => {
+  res.render("urls_register", { username: req.cookies["username"] });
+});
+
 //Individual URL page
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
