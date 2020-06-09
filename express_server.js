@@ -43,11 +43,26 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const longUrl = req.body.longURL;
+  let longURL = req.body.longURL;
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = longUrl;
-  console.log(urlDatabase);
-  res.send("ok"); //
+
+  if (!longURL.startsWith("http://")) {
+    urlDatabase[shortURL] = `http://${longURL}`;
+  } else {
+    urlDatabase[shortURL] = longURL;
+  }
+  res.redirect(`/urls/${shortURL}`);
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  if (longURL) {
+    res.redirect(longURL);
+  } else {
+    res.send(
+      `<html><h3>Please resubmit your URL <a href="/urls/new">here</a></h3></html>`
+    );
+  }
 });
 
 app.get("/urls/:shortURL", (req, res) => {
