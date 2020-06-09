@@ -3,8 +3,6 @@ const app = express();
 const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
 
-let name = "test";
-
 const generateRandomString = () => {
   return Math.floor((1 + Math.random()) * 0x1000000)
     .toString(16)
@@ -14,6 +12,19 @@ const generateRandomString = () => {
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
+};
+
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
 };
 
 //Middleware to use body parser
@@ -42,7 +53,9 @@ app.get("/", (req, res) => {
 //Index page
 app.get("/urls", (req, res) => {
   let templateVars = {
-    username: req.cookies["username"],
+    username: users[req.cookies["user_id"]],
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
     urls: urlDatabase,
   };
   res.render("urls_index", templateVars);
@@ -51,7 +64,7 @@ app.get("/urls", (req, res) => {
 //Page to add new
 app.get("/urls/new", (req, res) => {
   let templateVars = {
-    username: req.cookies["username"],
+    username: users[req.cookies["user_id"]],
     urls: urlDatabase,
   };
   res.render("urls_new", templateVars);
@@ -65,7 +78,7 @@ app.get("/register", (req, res) => {
 //Individual URL page
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
-    username: req.cookies["username"],
+    username: users[req.cookies["user_id"]],
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
   };
@@ -123,6 +136,18 @@ app.post("/login", (req, res) => {
 
 //Logout
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
+  res.redirect("/urls");
+});
+
+//Register
+app.post("/register", (req, res) => {
+  const id = generateRandomString();
+  users[id] = {
+    username: id,
+    email: req.body.email,
+    password: req.body.password,
+  };
+  res.cookie("user_id", users[id].username);
   res.redirect("/urls");
 });
