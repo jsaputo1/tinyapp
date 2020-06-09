@@ -42,18 +42,6 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
-app.post("/urls", (req, res) => {
-  let longURL = req.body.longURL;
-  const shortURL = generateRandomString();
-
-  if (!longURL.startsWith("http://")) {
-    urlDatabase[shortURL] = `http://${longURL}`;
-  } else {
-    urlDatabase[shortURL] = longURL;
-  }
-  res.redirect(`/urls/${shortURL}`);
-});
-
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   if (longURL) {
@@ -71,4 +59,21 @@ app.get("/urls/:shortURL", (req, res) => {
     longURL: urlDatabase[req.params.shortURL],
   };
   res.render("urls_show", templateVars);
+});
+
+app.post("/urls", (req, res) => {
+  let longURL = req.body.longURL;
+  const shortURL = generateRandomString();
+
+  if (!longURL.startsWith("http://")) {
+    urlDatabase[shortURL] = `http://${longURL}`;
+  } else {
+    urlDatabase[shortURL] = longURL;
+  }
+  res.redirect(`/urls/${shortURL}`);
+});
+
+app.post("/urls/:shortURL/delete", (req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect("/urls");
 });
