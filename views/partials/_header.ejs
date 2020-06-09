@@ -16,7 +16,11 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-        <p>Logged In as: <%= username %></p>
+        <% if (username) {%>
+        <p style="margin-right: 25px;">Logged In as: <%= username %></p>
+        <% } else { %>
+        <p style="margin-right: 25px;">Test</p>
+        <% } %>
 
         <form method="POST" action="/login">
           <input type="text" name="username" placeholder="Username" />
