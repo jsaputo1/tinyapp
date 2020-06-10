@@ -29,8 +29,7 @@ const userLookup = (email) => {
       return users[user];
     }
   }
-  console.log("Email not found");
-  return;
+  return false;
 };
 
 const generateRandomString = () => {
@@ -79,7 +78,11 @@ app.get("/urls/new", (req, res) => {
     username: users[req.cookies["user_id"]],
     urls: urlDatabase,
   };
-  res.render("urls_new", templateVars);
+  if (templateVars.username) {
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 //Registration page
@@ -120,7 +123,6 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/urls", (req, res) => {
   let longURL = req.body.longURL;
   const shortURL = generateRandomString();
-
   if (!longURL.startsWith("http://")) {
     urlDatabase[shortURL] = `http://${longURL}`;
   } else {
@@ -144,19 +146,37 @@ app.post("/urls/:shortURL", (req, res) => {
   res.redirect("/urls");
 });
 
+// const authenticateUser = (email, password) => {
+//   if (!userLookup(email)) {
+//     // res.send("Error: 403. E-Mail address cannot be found");
+//     return false;
+//   } else if (userLookup(email).password != password) {
+//     // res.send("Error: 403. Incorrect password");
+//     return false;
+//   }
+//   return true;
+// };
+
 //Login
 app.post("/login", (req, res) => {
-  if (!userLookup(req.body.email)) {
+  let email = req.body.email;
+  let password = req.body.password;
+  if (!userLookup(email)) {
     res.send("Error: 403. E-Mail address cannot be found");
     return;
-  } else if (userLookup(req.body.email).password != req.body.password) {
+  } else if (userLookup(email).password != password) {
     res.send("Error: 403. Incorrect password");
     return;
   }
-  let id = userLookup(req.body.email).id;
+  // if (authenticateUser(email, password)) {
+  let id = userLookup(email).id;
   res.cookie("user_id", users[id].id);
   res.redirect("/urls");
   return;
+  // } else {
+  //   res.send("Error: 403");
+  //   return;
+  // }
 });
 
 //Logout
@@ -167,19 +187,20 @@ app.post("/logout", (req, res) => {
 
 //Register
 app.post("/register", (req, res) => {
-  if (req.body.password.length < 1) {
+  let email = req.body.email;
+  let password = req.body.password;
+  if (password.length < 1) {
     res.send("Error: 400. Your password is not long enough");
     return;
-  } else if (userLookup(req.body.email)) {
+  } else if (userLookup(email)) {
     res.send("Error: 400. Your e-mail is already registered");
     return;
   }
-
   const id = generateRandomString();
   users[id] = {
     username: id,
-    email: req.body.email,
-    password: req.body.password,
+    email: email,
+    password: password,
   };
   res.cookie("user_id", users[id].username);
   res.redirect("/urls");
