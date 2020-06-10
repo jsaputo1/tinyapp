@@ -3,12 +3,6 @@ const app = express();
 const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
 
-const generateRandomString = () => {
-  return Math.floor((1 + Math.random()) * 0x1000000)
-    .toString(16)
-    .substring(1);
-};
-
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
@@ -18,13 +12,29 @@ const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: "1234",
   },
   user2RandomID: {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk",
+    password: "1234",
   },
+};
+
+const userLookup = (email) => {
+  for (const user in users) {
+    if (users[user].email === email) {
+      return users[user];
+    }
+  }
+  console.log("Email not found");
+  return;
+};
+
+const generateRandomString = () => {
+  return Math.floor((1 + Math.random()) * 0x1000000)
+    .toString(16)
+    .substring(1);
 };
 
 //Middleware to use body parser
@@ -72,12 +82,12 @@ app.get("/urls/new", (req, res) => {
 
 //Registration page
 app.get("/register", (req, res) => {
-  res.render("urls_register", { username: req.cookies["username"] });
+  res.render("urls_register", { username: users[req.cookies["user_id"]] });
 });
 
 //Login
 app.get("/login", (req, res) => {
-  res.render("urls_login", { username: req.cookies["username"] });
+  res.render("urls_login", { username: users[req.cookies["user_id"]] });
 });
 
 //Individual URL page
@@ -134,9 +144,28 @@ app.post("/urls/:shortURL", (req, res) => {
 
 //Login
 app.post("/login", (req, res) => {
-  let username = req.body.username;
-  res.cookie("username", username);
-  res.redirect("/urls");
+  for (let user in users) {
+    let id = user;
+    users[id].email;
+    users[id].password;
+    if ((req.body.email = !users[id].email)) {
+      res.send("Error: 403. E-Mail address cannot be found");
+      console.log(users);
+      return;
+    } else if (
+      req.body.email === users[id].email &&
+      req.body.password != users[id].password
+    ) {
+      res.send("Error: 403. Incorrect password");
+      console.log(users);
+      return;
+    } else {
+      console.log("success");
+      console.log(users);
+
+      return;
+    }
+  }
 });
 
 //Logout
@@ -150,14 +179,11 @@ app.post("/register", (req, res) => {
   if (req.body.password.length < 1) {
     res.send("Error: 400. Your password is not long enough");
     return;
+  } else if (userLookup(req.body.email)) {
+    res.send("Error: 400. Your e-mail is already registered");
+    return;
   }
-  for (let user in users) {
-    let id = user;
-    if (users[id].email === req.body.email) {
-      res.send("Error: 400. Your e-mail is already registered");
-      return;
-    }
-  }
+
   const id = generateRandomString();
   users[id] = {
     username: id,
