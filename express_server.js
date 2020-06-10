@@ -4,8 +4,8 @@ const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
 
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "user2RandomID" },
 };
 
 const users = {
@@ -53,23 +53,24 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
+const filterByUser = (userID) => {
+  return Object.entries(urlDatabase).filter(
+    (url) => url[1].userID === userID.id
+  );
+};
 
-// app.get("/hello", (req, res) => {
-//   res.send("<html><body>Hello <b>World</b></body></html>\n");
-// });
-
-//Index page
 app.get("/urls", (req, res) => {
-  let templateVars = {
-    username: users[req.cookies["user_id"]],
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
-    urls: urlDatabase,
-  };
-  res.render("urls_index", templateVars);
+  if (req.cookies["user_id"]) {
+    const username = users[req.cookies["user_id"]];
+    const filteredShortURLs = filterByUser(username);
+    let templateVars = {
+      username,
+      urls: filteredShortURLs,
+    };
+    res.render("urls_index", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 //Page to add new
@@ -81,7 +82,7 @@ app.get("/urls/new", (req, res) => {
   if (templateVars.username) {
     res.render("urls_new", templateVars);
   } else {
-    res.redirect("/login");
+    res.redirect("/register");
   }
 });
 
@@ -146,17 +147,6 @@ app.post("/urls/:shortURL", (req, res) => {
   res.redirect("/urls");
 });
 
-// const authenticateUser = (email, password) => {
-//   if (!userLookup(email)) {
-//     // res.send("Error: 403. E-Mail address cannot be found");
-//     return false;
-//   } else if (userLookup(email).password != password) {
-//     // res.send("Error: 403. Incorrect password");
-//     return false;
-//   }
-//   return true;
-// };
-
 //Login
 app.post("/login", (req, res) => {
   let email = req.body.email;
@@ -168,15 +158,11 @@ app.post("/login", (req, res) => {
     res.send("Error: 403. Incorrect password");
     return;
   }
-  // if (authenticateUser(email, password)) {
+
   let id = userLookup(email).id;
   res.cookie("user_id", users[id].id);
   res.redirect("/urls");
   return;
-  // } else {
-  //   res.send("Error: 403");
-  //   return;
-  // }
 });
 
 //Logout
