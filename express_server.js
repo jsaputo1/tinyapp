@@ -75,6 +75,11 @@ app.get("/register", (req, res) => {
   res.render("urls_register", { username: req.cookies["username"] });
 });
 
+//Login
+app.get("/login", (req, res) => {
+  res.render("urls_login", { username: req.cookies["username"] });
+});
+
 //Individual URL page
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
