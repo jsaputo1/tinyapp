@@ -21,6 +21,8 @@ const users = {
   },
 };
 
+//Functions
+
 const userLookup = (email) => {
   for (const user in users) {
     if (users[user].email === email) {
