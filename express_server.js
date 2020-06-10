@@ -138,18 +138,13 @@ app.post("/urls", (req, res) => {
 
 //Delete URL
 app.post("/urls/:shortURL/delete", (req, res) => {
-  const username = users[req.cookies["user_id"]];
-  if (filterByUser(username)) {
-    const filteredShortURLs = filterByUser(username);
-    // const shortURL = req.params.shortURL;
-    console.log("Before Delete" + filteredShortURLs);
-    delete filteredShortURLs[0];
-    console.log("After Delete" + filteredShortURLs);
-
-    // console.log(filteredShortURLs + "test");
+  const username = req.cookies["user_id"];
+  const shortURL = req.params.shortURL;
+  if (urlDatabase[shortURL].userID === username) {
+    delete urlDatabase[shortURL];
     res.redirect("/urls");
   } else {
-    console.log("Not logged in");
+    res.send("Error: You are not logged in");
   }
 });
 
