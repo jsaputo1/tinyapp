@@ -38,6 +38,17 @@ const generateRandomString = () => {
     .substring(1);
 };
 
+const urlForUser = (userID) => {
+  const userURLs = {};
+  for (const shortURL in urlDatabase) {
+    const longURL = urlDatabase[shortURL].longURL;
+    if (urlDatabase[shortURL].userID === userID) {
+      userURLs[shortURL] = longURL;
+    }
+  }
+  return userURLs;
+};
+
 //Middleware to use body parser
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -53,19 +64,12 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
-const filterByUser = (userID) => {
-  return Object.entries(urlDatabase).filter(
-    (url) => url[1].userID === userID.id
-  );
-};
-
 app.get("/urls", (req, res) => {
   if (req.cookies["user_id"]) {
-    const username = users[req.cookies["user_id"]];
-    const filteredShortURLs = filterByUser(username);
-    let templateVars = {
-      username,
-      urls: filteredShortURLs,
+    const username = req.cookies["user_id"];
+    const templateVars = {
+      username: users[username],
+      urls: urlForUser(username),
     };
     res.render("urls_index", templateVars);
   } else {
@@ -134,9 +138,19 @@ app.post("/urls", (req, res) => {
 
 //Delete URL
 app.post("/urls/:shortURL/delete", (req, res) => {
-  const shortURL = req.params.shortURL;
-  delete urlDatabase[shortURL];
-  res.redirect("/urls");
+  const username = users[req.cookies["user_id"]];
+  if (filterByUser(username)) {
+    const filteredShortURLs = filterByUser(username);
+    // const shortURL = req.params.shortURL;
+    console.log("Before Delete" + filteredShortURLs);
+    delete filteredShortURLs[0];
+    console.log("After Delete" + filteredShortURLs);
+
+    // console.log(filteredShortURLs + "test");
+    res.redirect("/urls");
+  } else {
+    console.log("Not logged in");
+  }
 });
 
 //Edit URL
