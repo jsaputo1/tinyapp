@@ -29,7 +29,6 @@ const userLookup = (email) => {
       return users[userID];
     }
   }
-  console.log("Email not found");
   return false;
 };
 
