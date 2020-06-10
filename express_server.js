@@ -4,8 +4,8 @@ const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
 
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "user2RandomID" },
 };
 
 const users = {
@@ -39,6 +39,17 @@ const generateRandomString = () => {
     .substring(1);
 };
 
+const urlForUser = (userID) => {
+  const userURLs = {};
+  for (const shortURL in urlDatabase) {
+    const longURL = urlDatabase[shortURL].longURL;
+    if (urlDatabase[shortURL].userID === userID) {
+      userURLs[shortURL] = longURL;
+    }
+  }
+  return userURLs;
+};
+
 //Middleware to use body parser
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -50,36 +61,37 @@ app.listen(PORT, () => {
 var cookieParser = require("cookie-parser");
 app.use(cookieParser());
 
+// / page
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
-
-// app.get("/hello", (req, res) => {
-//   res.send("<html><body>Hello <b>World</b></body></html>\n");
-// });
-
-//Index page
+// Index
 app.get("/urls", (req, res) => {
-  let templateVars = {
-    username: users[req.cookies["user_id"]],
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
-    urls: urlDatabase,
-  };
-  res.render("urls_index", templateVars);
+  if (req.cookies["user_id"]) {
+    const username = req.cookies["user_id"];
+    const templateVars = {
+      username: users[username],
+      urls: urlForUser(username),
+    };
+    res.render("urls_index", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 //Page to add new
 app.get("/urls/new", (req, res) => {
+  const username = req.cookies["user_id"];
   let templateVars = {
     username: users[req.cookies["user_id"]],
     urls: urlDatabase,
   };
-  res.render("urls_new", templateVars);
+  if (templateVars.username) {
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 //Registration page
@@ -94,17 +106,19 @@ app.get("/login", (req, res) => {
 
 //Individual URL page
 app.get("/urls/:shortURL", (req, res) => {
+  shortURL = req.params.shortURL;
+  console.log(urlDatabase);
   let templateVars = {
     username: users[req.cookies["user_id"]],
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
+    longURL: urlDatabase[req.params.shortURL]["longURL"],
   };
   res.render("urls_show", templateVars);
 });
 
 //Redirect after submitting a new URL
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   if (longURL) {
     res.redirect(longURL);
   } else {
@@ -118,42 +132,64 @@ app.get("/u/:shortURL", (req, res) => {
 
 //Create new URL
 app.post("/urls", (req, res) => {
-  let longURL = req.body.longURL;
+  const longURL = req.body.longURL;
   const shortURL = generateRandomString();
+  const userID = req.cookies["user_id"];
 
   if (!longURL.startsWith("http://")) {
-    urlDatabase[shortURL] = `http://${longURL}`;
+    urlDatabase[shortURL] = {
+      longURL: `http://${longURL}`,
+      userID: userID,
+      shortURL: shortURL,
+    };
   } else {
-    urlDatabase[shortURL] = longURL;
+    urlDatabase[shortURL] = {
+      longURL: longURL,
+      userID: userID,
+      shortURL: shortURL,
+    };
   }
   res.redirect(`/urls/${shortURL}`);
 });
 
 //Delete URL
 app.post("/urls/:shortURL/delete", (req, res) => {
+  const username = req.cookies["user_id"];
   const shortURL = req.params.shortURL;
-  delete urlDatabase[shortURL];
-  res.redirect("/urls");
+  if (urlDatabase[shortURL].userID === username) {
+    delete urlDatabase[shortURL];
+    res.redirect("/urls");
+  } else {
+    res.send("Error: You are not logged in");
+  }
 });
 
 //Edit URL
 app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
+  const username = req.cookies["user_id"];
   let longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
-  res.redirect("/urls");
+  if (urlDatabase[shortURL].userID === username) {
+    urlDatabase[shortURL].longURL = longURL;
+    res.redirect("/urls");
+  } else {
+    res.send("Error: You are not logged in");
+  }
 });
 
 //Login
 app.post("/login", (req, res) => {
-  if (!userLookup(req.body.email)) {
+  let email = req.body.email;
+  let password = req.body.password;
+  if (!userLookup(email)) {
     res.send("Error: 403. E-Mail address cannot be found");
     return;
-  } else if (userLookup(req.body.email).password != req.body.password) {
+  } else if (userLookup(email).password != password) {
     res.send("Error: 403. Incorrect password");
     return;
   }
-  let id = userLookup(req.body.email).id;
+
+  let id = userLookup(email).id;
   res.cookie("user_id", users[id].id);
   res.redirect("/urls");
   return;
@@ -167,19 +203,20 @@ app.post("/logout", (req, res) => {
 
 //Register
 app.post("/register", (req, res) => {
-  if (req.body.password.length < 1) {
+  let email = req.body.email;
+  let password = req.body.password;
+  if (password.length < 1) {
     res.send("Error: 400. Your password is not long enough");
     return;
-  } else if (userLookup(req.body.email)) {
+  } else if (userLookup(email)) {
     res.send("Error: 400. Your e-mail is already registered");
     return;
   }
-
   const id = generateRandomString();
   users[id] = {
     username: id,
-    email: req.body.email,
-    password: req.body.password,
+    email: email,
+    password: password,
   };
   res.cookie("user_id", users[id].username);
   res.redirect("/urls");
