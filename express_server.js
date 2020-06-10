@@ -24,13 +24,13 @@ const users = {
 //Functions
 
 const userLookup = (email) => {
-  for (const user in users) {
-    if (users[user].email === email) {
-      return users[user];
+  for (const userID in users) {
+    if (users[userID].email === email) {
+      return users[userID];
     }
   }
   console.log("Email not found");
-  return;
+  return false;
 };
 
 const generateRandomString = () => {
