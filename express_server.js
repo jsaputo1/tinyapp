@@ -144,28 +144,17 @@ app.post("/urls/:shortURL", (req, res) => {
 
 //Login
 app.post("/login", (req, res) => {
-  for (let user in users) {
-    let id = user;
-    users[id].email;
-    users[id].password;
-    if ((req.body.email = !users[id].email)) {
-      res.send("Error: 403. E-Mail address cannot be found");
-      console.log(users);
-      return;
-    } else if (
-      req.body.email === users[id].email &&
-      req.body.password != users[id].password
-    ) {
-      res.send("Error: 403. Incorrect password");
-      console.log(users);
-      return;
-    } else {
-      console.log("success");
-      console.log(users);
-
-      return;
-    }
+  if (!userLookup(req.body.email)) {
+    res.send("Error: 403. E-Mail address cannot be found");
+    return;
+  } else if (userLookup(req.body.email).password != req.body.password) {
+    res.send("Error: 403. Incorrect password");
+    return;
   }
+  let id = userLookup(req.body.email).id;
+  res.cookie("user_id", users[id].id);
+  res.redirect("/urls");
+  return;
 });
 
 //Logout
