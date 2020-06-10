@@ -152,8 +152,12 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   let longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
-  res.redirect("/urls");
+  if (urlDatabase[shortURL].userID === username) {
+    urlDatabase[shortURL] = longURL;
+    res.redirect("/urls");
+  } else {
+    res.send("Error: You are not logged in");
+  }
 });
 
 //Login
