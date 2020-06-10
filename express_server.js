@@ -60,10 +60,12 @@ app.listen(PORT, () => {
 var cookieParser = require("cookie-parser");
 app.use(cookieParser());
 
+// / page
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+// Index
 app.get("/urls", (req, res) => {
   if (req.cookies["user_id"]) {
     const username = req.cookies["user_id"];
@@ -79,6 +81,7 @@ app.get("/urls", (req, res) => {
 
 //Page to add new
 app.get("/urls/new", (req, res) => {
+  const username = req.cookies["user_id"];
   let templateVars = {
     username: users[req.cookies["user_id"]],
     urls: urlDatabase,
@@ -86,7 +89,7 @@ app.get("/urls/new", (req, res) => {
   if (templateVars.username) {
     res.render("urls_new", templateVars);
   } else {
-    res.redirect("/register");
+    res.redirect("/login");
   }
 });
 
@@ -102,17 +105,19 @@ app.get("/login", (req, res) => {
 
 //Individual URL page
 app.get("/urls/:shortURL", (req, res) => {
+  shortURL = req.params.shortURL;
+  console.log(urlDatabase);
   let templateVars = {
     username: users[req.cookies["user_id"]],
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
+    longURL: urlDatabase[req.params.shortURL]["longURL"],
   };
   res.render("urls_show", templateVars);
 });
 
 //Redirect after submitting a new URL
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   if (longURL) {
     res.redirect(longURL);
   } else {
@@ -126,12 +131,22 @@ app.get("/u/:shortURL", (req, res) => {
 
 //Create new URL
 app.post("/urls", (req, res) => {
-  let longURL = req.body.longURL;
+  const longURL = req.body.longURL;
   const shortURL = generateRandomString();
+  const userID = req.cookies["user_id"];
+
   if (!longURL.startsWith("http://")) {
-    urlDatabase[shortURL] = `http://${longURL}`;
+    urlDatabase[shortURL] = {
+      longURL: `http://${longURL}`,
+      userID: userID,
+      shortURL: shortURL,
+    };
   } else {
-    urlDatabase[shortURL] = longURL;
+    urlDatabase[shortURL] = {
+      longURL: longURL,
+      userID: userID,
+      shortURL: shortURL,
+    };
   }
   res.redirect(`/urls/${shortURL}`);
 });
@@ -151,9 +166,10 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 //Edit URL
 app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
+  const username = req.cookies["user_id"];
   let longURL = req.body.longURL;
   if (urlDatabase[shortURL].userID === username) {
-    urlDatabase[shortURL] = longURL;
+    urlDatabase[shortURL].longURL = longURL;
     res.redirect("/urls");
   } else {
     res.send("Error: You are not logged in");
