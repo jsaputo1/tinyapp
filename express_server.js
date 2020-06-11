@@ -49,16 +49,23 @@ const urlForUser = (userID) => {
   return userURLs;
 };
 
-//Middleware to use body parser
+//Middleware
+
+// Body parser
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-//Middleware to use cookie parser
+//Cookie parser
 var cookieParser = require("cookie-parser");
 app.use(cookieParser());
+
+//bcrypt
+const bcrypt = require("bcrypt");
+
+//Get Routes
 
 // / page
 app.get("/", (req, res) => {
@@ -178,18 +185,17 @@ app.post("/urls/:shortURL", (req, res) => {
 
 //Login
 app.post("/login", (req, res) => {
-  let email = req.body.email;
-  let password = req.body.password;
+  const email = req.body.email;
+  const password = req.body.password;
+  const user = userLookup(email);
   if (!userLookup(email)) {
     res.send("Error: 403. E-Mail address cannot be found");
     return;
-  } else if (userLookup(email).password != password) {
+  } else if (!bcrypt.compareSync(password, user.hashedPassword)) {
     res.send("Error: 403. Incorrect password");
     return;
   }
-
-  let id = userLookup(email).id;
-  res.cookie("user_id", users[id].id);
+  res.cookie("user_id", user.username);
   res.redirect("/urls");
   return;
 });
@@ -202,8 +208,10 @@ app.post("/logout", (req, res) => {
 
 //Register
 app.post("/register", (req, res) => {
-  let email = req.body.email;
-  let password = req.body.password;
+  const email = req.body.email;
+  const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
   if (password.length < 1) {
     res.send("Error: 400. Your password is not long enough");
     return;
@@ -216,6 +224,7 @@ app.post("/register", (req, res) => {
     username: id,
     email: email,
     password: password,
+    hashedPassword,
   };
   res.cookie("user_id", users[id].username);
   res.redirect("/urls");
