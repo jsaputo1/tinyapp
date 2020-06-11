@@ -35,12 +35,16 @@
             <td><a href="<%= urls[shortURL] %>"><%= urls[shortURL] %></a></td>
             <td>
               <form method="GET" action="/urls/<%= shortURL %>">
-                <button type="edit" class="btn btn-primary">Edit</button>
+                <button type="edit" class="btn btn-outline-primary">
+                  Edit
+                </button>
               </form>
             </td>
             <td>
               <form method="POST" action="/urls/<%= shortURL %>/delete">
-                <button type="submit" class="btn btn-primary">Delete</button>
+                <button type="submit" class="btn btn-outline-danger">
+                  Delete
+                </button>
               </form>
             </td>
           </tr>
