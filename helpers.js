@@ -4,10 +4,8 @@ const getUserByEmail = (email, database) => {
       return database[userID];
     }
   }
-  return false;
+  return undefined;
 };
-
-// console.log(getUserByEmail("user2@example.com"));
 
 const generateRandomString = () => {
   return Math.floor((1 + Math.random()) * 0x1000000)
@@ -20,7 +18,6 @@ const urlForUser = (userID, database) => {
   for (const shortURL in database) {
     const longURL = database[shortURL].longURL;
     if (database[shortURL].userID === userID) {
-      console.log(database[shortURL]);
       userURLs[shortURL] = longURL;
     }
   }
