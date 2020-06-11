@@ -53,15 +53,6 @@ app.get("/", (req, res) => {
 
 // Index
 app.get("/urls", (req, res) => {
-  // const userCookie = req.session.user_id;
-  // test = urlDatabase;
-  // console.log(test);
-  // if (!longURL.startsWith("http://")) {
-  //   urlDatabase[userCookie]["longURL"] = {
-  //     longURL: "http://" + longURL,
-  //   };
-  // }
-
   if (req.session.user_id) {
     const userCookie = req.session.user_id;
     const templateVars = {
@@ -74,7 +65,7 @@ app.get("/urls", (req, res) => {
   }
 });
 
-//Page to add new
+//Add new URL
 app.get("/urls/new", (req, res) => {
   const userCookie = req.session.user_id;
   let templateVars = {
@@ -113,9 +104,13 @@ app.get("/urls/:shortURL", (req, res) => {
 
 //Redirect after submitting a new URL
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL].longURL;
-  if (longURL) {
-    res.redirect(longURL);
+  const shortURL = req.params.shortURL;
+  if (urlDatabase[shortURL]) {
+    const longURL = urlDatabase[shortURL].longURL;
+
+    if (longURL) {
+      res.redirect(longURL);
+    }
   } else {
     res.send(
       `<html><h3>Please resubmit your URL <a href="/urls/new">here</a></h3></html>`
@@ -132,6 +127,8 @@ app.post("/urls", (req, res) => {
   const userID = req.session.user_id;
 
   if (!longURL.startsWith("http://")) {
+    //substring to get first 4 HTTP:
+
     urlDatabase[shortURL] = {
       longURL: `http://${longURL}`,
       userID: userID,
@@ -155,7 +152,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     delete urlDatabase[shortURL];
     res.redirect("/urls");
   } else {
-    res.send("Error: You are not logged in");
+    res.status(403).send("Error: You are not logged in");
   }
 });
 
@@ -163,40 +160,17 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const username = req.session.user_id;
-
   let longURL = req.body.longURL;
   if (!longURL.startsWith("http://")) {
     longURL = "http://" + longURL;
   }
-
   if (urlDatabase[shortURL].userID === username) {
     urlDatabase[shortURL].longURL = longURL;
-
     res.redirect("/urls");
   } else {
-    res.send("Error: You are not logged in");
+    res.status(403).send("Error: You are not logged in");
   }
 });
-
-// //Login
-// app.post("/login", (req, res) => {
-//   const email = req.body.email;
-//   const password = req.body.password;
-
-//   const user = getUserByEmail(email, users);
-
-//   if (!getUserByEmail(email, users)) {
-//     res.send("Error: 403. E-Mail address cannot be found");
-//     return;
-//   } else if (!bcrypt.compareSync(password, user.password)) {
-//     res.send("Error: 403. Incorrect password");
-//     return;
-//   }
-//   console.log("test");
-//   req.session.user_id = user.username;
-//   res.redirect("/urls");
-//   return;
-// });
 
 app.post("/login", (req, res) => {
   const user = getUserByEmail(req.body.email, users);
@@ -204,12 +178,7 @@ app.post("/login", (req, res) => {
     req.session.user_id = user.id;
     res.redirect("/urls");
   } else {
-    res.send("Error: 403. Incorrect username or password");
-    res.statusCode = 400;
-    // res.render("urls_login", {
-    //   username: undefined,
-    //   error: "Incorrect email or password!",
-    // });
+    res.status(403).send("Error: 403. Incorrect username or password");
   }
 });
 
@@ -225,10 +194,10 @@ app.post("/register", (req, res) => {
   const password = req.body.password;
 
   if (password.length < 1) {
-    res.send("Error: 400. Your password is not long enough");
+    res.status(400).send("Your password is not long enough");
     return;
   } else if (getUserByEmail(email, users)) {
-    res.send("Error: 400. Your e-mail is already registered");
+    res.status(400).send("Your e-mail is already registered");
     return;
   }
   const id = generateRandomString();
@@ -240,8 +209,6 @@ app.post("/register", (req, res) => {
   req.session.user_id = users[id].id;
   res.redirect("/urls");
 });
-
-// module.exports = { urlDatabase };
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
