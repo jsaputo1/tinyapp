@@ -1,7 +1,21 @@
+// const bcrypt = require("bcrypt");
+// const saltRounds = 10;
+// const users = {
+//   userRandomID: {
+//     id: "userRandomID",
+//     email: "user@example.com",
+//     ,
+//   },
+
 const express = require("express");
+const bodyParser = require("body-parser");
+const bcrypt = require("bcrypt");
 const app = express();
 const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
+
+//bcrypt
+const saltRounds = 10;
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
@@ -12,18 +26,27 @@ const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password: "1234",
+    password: bcrypt.hashSync("1234", saltRounds),
   },
   user2RandomID: {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "1234",
+    password: bcrypt.hashSync("1234", saltRounds),
   },
 };
 
 //Functions
 
-const userLookup = (email, database) => {
+// const getUserByEmail = (email, database) => {
+// for (const userID in database) {
+// if (database[userID].email === email) {
+// return database[userID];
+// }
+// }
+// return false;
+// };
+
+const getUserByEmail = (email, database) => {
   for (const userID in database) {
     if (database[userID].email === email) {
       return database[userID];
@@ -31,6 +54,8 @@ const userLookup = (email, database) => {
   }
   return false;
 };
+
+console.log(getUserByEmail("user2@example.com"));
 
 const generateRandomString = () => {
   return Math.floor((1 + Math.random()) * 0x1000000)
@@ -49,17 +74,8 @@ const urlForUser = (userID) => {
   return userURLs;
 };
 
-//Middleware
-
 // Body parser
-const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
-
-//bcrypt
-const bcrypt = require("bcrypt");
 
 //Cookie-session
 const cookieSession = require("cookie-session");
@@ -188,21 +204,39 @@ app.post("/urls/:shortURL", (req, res) => {
   }
 });
 
-//Login
+// //Login
+// app.post("/login", (req, res) => {
+//   const email = req.body.email;
+//   const password = req.body.password;
+
+//   const user = getUserByEmail(email);
+
+//   if (!getUserByEmail(email)) {
+//     res.send("Error: 403. E-Mail address cannot be found");
+//     return;
+//   } else if (!bcrypt.compareSync(password, user.password)) {
+//     res.send("Error: 403. Incorrect password");
+//     return;
+//   }
+//   console.log("test");
+//   req.session.user_id = user.username;
+//   res.redirect("/urls");
+//   return;
+// });
+
 app.post("/login", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  const user = userLookup(email);
-  if (!userLookup(email)) {
-    res.send("Error: 403. E-Mail address cannot be found");
-    return;
-  } else if (!bcrypt.compareSync(password, user.hashedPassword)) {
-    res.send("Error: 403. Incorrect password");
-    return;
+  const user = getUserByEmail(req.body.email, users);
+
+  if (user && bcrypt.compareSync(req.body.password, user.password)) {
+    req.session.user_id = user.id;
+    res.redirect("/urls");
+  } else {
+    res.statusCode = 400;
+    res.render("login", {
+      user: undefined,
+      error: "Incorrect email or password!",
+    });
   }
-  req.session.user_id = user.username;
-  res.redirect("/urls");
-  return;
 });
 
 //Logout
@@ -215,12 +249,11 @@ app.post("/logout", (req, res) => {
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (password.length < 1) {
     res.send("Error: 400. Your password is not long enough");
     return;
-  } else if (userLookup(email)) {
+  } else if (getUserByEmail(email, users)) {
     res.send("Error: 400. Your e-mail is already registered");
     return;
   }
@@ -228,9 +261,14 @@ app.post("/register", (req, res) => {
   users[id] = {
     username: id,
     email: email,
-    password: password,
-    hashedPassword,
+    password: bcrypt.hashSync(password, saltRounds),
   };
   req.session.user_id = users[id].username;
   res.redirect("/urls");
+});
+
+// module.exports = { urlDatabase };
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
 });
