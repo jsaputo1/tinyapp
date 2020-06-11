@@ -8,7 +8,7 @@
       </div>
         <div class="navbar-nav">
           <% if (username) {%>
-            <h6 style="display: flex; align-items: center; padding-right: 10px;">Logged In as: <%= username.email %></h6>
+            <h7 style="display: flex; align-items: center; padding-right: 10px; color: #f8f9fa">Logged in as: <span style="color: #1a1919; margin-left: 5px;"><%= username.email %></span></h7>
             <form method="POST" action="/logout">
               <button type="submit" class="btn btn-primary">Logout</button>
             </form>
