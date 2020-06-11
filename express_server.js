@@ -1,15 +1,12 @@
-// const bcrypt = require("bcrypt");
-// const saltRounds = 10;
-// const users = {
-//   userRandomID: {
-//     id: "userRandomID",
-//     email: "user@example.com",
-//     ,
-//   },
-
 const express = require("express");
 const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
+const {
+  generateRandomString,
+  getUserByEmail,
+  urlForUser,
+} = require("./helpers");
+
 const app = express();
 const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
@@ -35,45 +32,6 @@ const users = {
   },
 };
 
-//Functions
-
-// const getUserByEmail = (email, database) => {
-// for (const userID in database) {
-// if (database[userID].email === email) {
-// return database[userID];
-// }
-// }
-// return false;
-// };
-
-const getUserByEmail = (email, database) => {
-  for (const userID in database) {
-    if (database[userID].email === email) {
-      return database[userID];
-    }
-  }
-  return false;
-};
-
-console.log(getUserByEmail("user2@example.com"));
-
-const generateRandomString = () => {
-  return Math.floor((1 + Math.random()) * 0x1000000)
-    .toString(16)
-    .substring(1);
-};
-
-const urlForUser = (userID) => {
-  const userURLs = {};
-  for (const shortURL in urlDatabase) {
-    const longURL = urlDatabase[shortURL].longURL;
-    if (urlDatabase[shortURL].userID === userID) {
-      userURLs[shortURL] = longURL;
-    }
-  }
-  return userURLs;
-};
-
 // Body parser
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -96,22 +54,27 @@ app.get("/", (req, res) => {
 // Index
 app.get("/urls", (req, res) => {
   if (req.session.user_id) {
-    const username = req.session.user_id;
+    // console.log("Request to get index with cookie");
+
+    const userCookie = req.session.user_id;
+
     const templateVars = {
-      username: users[username],
-      urls: urlForUser(username),
+      username: users[userCookie],
+      urls: urlForUser(userCookie, urlDatabase),
     };
     res.render("urls_index", templateVars);
   } else {
+    // console.log("Request to get index without cookie");
+
     res.redirect("/login");
   }
 });
 
 //Page to add new
 app.get("/urls/new", (req, res) => {
-  const username = req.session.user_id;
+  const userCookie = req.session.user_id;
   let templateVars = {
-    username: users[req.session.user_id],
+    username: userCookie,
     urls: urlDatabase,
   };
   if (templateVars.username) {
@@ -133,13 +96,15 @@ app.get("/login", (req, res) => {
 
 //Individual URL page
 app.get("/urls/:shortURL", (req, res) => {
+  userCookie = req.session.user_id;
   shortURL = req.params.shortURL;
-  console.log(urlDatabase);
   let templateVars = {
-    username: users[req.session.user_id],
+    username: users[userCookie],
+    urls: urlForUser(userCookie, urlDatabase),
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL]["longURL"],
   };
+
   res.render("urls_show", templateVars);
 });
 
@@ -209,9 +174,9 @@ app.post("/urls/:shortURL", (req, res) => {
 //   const email = req.body.email;
 //   const password = req.body.password;
 
-//   const user = getUserByEmail(email);
+//   const user = getUserByEmail(email, users);
 
-//   if (!getUserByEmail(email)) {
+//   if (!getUserByEmail(email, users)) {
 //     res.send("Error: 403. E-Mail address cannot be found");
 //     return;
 //   } else if (!bcrypt.compareSync(password, user.password)) {
@@ -226,16 +191,16 @@ app.post("/urls/:shortURL", (req, res) => {
 
 app.post("/login", (req, res) => {
   const user = getUserByEmail(req.body.email, users);
-
   if (user && bcrypt.compareSync(req.body.password, user.password)) {
     req.session.user_id = user.id;
     res.redirect("/urls");
   } else {
+    res.send("Error: 403. Incorrect username or password");
     res.statusCode = 400;
-    res.render("login", {
-      user: undefined,
-      error: "Incorrect email or password!",
-    });
+    // res.render("urls_login", {
+    //   username: undefined,
+    //   error: "Incorrect email or password!",
+    // });
   }
 });
 
@@ -259,11 +224,11 @@ app.post("/register", (req, res) => {
   }
   const id = generateRandomString();
   users[id] = {
-    username: id,
+    id: id,
     email: email,
     password: bcrypt.hashSync(password, saltRounds),
   };
-  req.session.user_id = users[id].username;
+  req.session.user_id = users[id].id;
   res.redirect("/urls");
 });
 
