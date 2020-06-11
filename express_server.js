@@ -53,19 +53,23 @@ app.get("/", (req, res) => {
 
 // Index
 app.get("/urls", (req, res) => {
+  // const userCookie = req.session.user_id;
+  // test = urlDatabase;
+  // console.log(test);
+  // if (!longURL.startsWith("http://")) {
+  //   urlDatabase[userCookie]["longURL"] = {
+  //     longURL: "http://" + longURL,
+  //   };
+  // }
+
   if (req.session.user_id) {
-    // console.log("Request to get index with cookie");
-
     const userCookie = req.session.user_id;
-
     const templateVars = {
       username: users[userCookie],
       urls: urlForUser(userCookie, urlDatabase),
     };
     res.render("urls_index", templateVars);
   } else {
-    // console.log("Request to get index without cookie");
-
     res.redirect("/login");
   }
 });
@@ -104,7 +108,6 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL]["longURL"],
   };
-
   res.render("urls_show", templateVars);
 });
 
@@ -160,9 +163,15 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const username = req.session.user_id;
+
   let longURL = req.body.longURL;
+  if (!longURL.startsWith("http://")) {
+    longURL = "http://" + longURL;
+  }
+
   if (urlDatabase[shortURL].userID === username) {
     urlDatabase[shortURL].longURL = longURL;
+
     res.redirect("/urls");
   } else {
     res.send("Error: You are not logged in");
