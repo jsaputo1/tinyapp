@@ -23,10 +23,10 @@ const users = {
 
 //Functions
 
-const userLookup = (email) => {
-  for (const userID in users) {
-    if (users[userID].email === email) {
-      return users[userID];
+const userLookup = (email, database) => {
+  for (const userID in database) {
+    if (database[userID].email === email) {
+      return database[userID];
     }
   }
   return false;
