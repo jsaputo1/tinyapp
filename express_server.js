@@ -107,13 +107,12 @@ app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   if (urlDatabase[shortURL]) {
     const longURL = urlDatabase[shortURL].longURL;
-
     if (longURL) {
       res.redirect(longURL);
     }
   } else {
     res.send(
-      `<html><h3>Please resubmit your URL <a href="/urls/new">here</a></h3></html>`
+      `<html><h3>Invalid short URL. Please resubmit your URL <a href="/urls/new">here</a></h3></html>`
     );
   }
 });
