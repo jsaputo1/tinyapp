@@ -169,11 +169,14 @@ app.post("/urls/:shortURL", (req, res) => {
   const username = req.session.user_id;
   const http = "http://";
   const https = "https://";
-  let longURL = req.body.longURL;
+  let longURL = req.body.longURL.toLowerCase();
 
-  if (!longURL.startsWith(http)) {
+  if (longURL.startsWith(https)) {
+    longURL = longURL;
+  } else if (!longURL.startsWith(http)) {
     longURL = "http://" + longURL;
   }
+
   if (urlDatabase[shortURL].userID === username) {
     urlDatabase[shortURL].longURL = longURL;
     res.redirect("/urls");
