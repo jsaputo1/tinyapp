@@ -34,8 +34,16 @@ httpConverter = function (longURL) {
   } else if (!longUrlStartLowerCase.startsWith(http)) {
     longURL = http + longURL;
   }
-  longURL = longURL;
   return longURL;
+};
+
+const authenticateUser = (email, password) => {
+  const user = getUserByEmail(email, users);
+  if (user && bcrypt.compareSync(password, user.password)) {
+    return user;
+  } else {
+    return false;
+  }
 };
 
 module.exports = {
@@ -43,4 +51,5 @@ module.exports = {
   generateRandomString,
   urlForUser,
   httpConverter,
+  authenticateUser,
 };
