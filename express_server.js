@@ -11,7 +11,6 @@ const {
   getUserByEmail,
   urlForUser,
   httpConverter,
-  authenticateUser,
 } = require("./helpers");
 
 //bcrypt
@@ -165,10 +164,8 @@ app.post("/urls/:shortURL", (req, res) => {
 
 // Login
 app.post("/login", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  const user = authenticateUser(email, password);
-  if (user) {
+  const user = getUserByEmail(req.body.email, users);
+  if (user && bcrypt.compareSync(req.body.password, user.password)) {
     req.session.user_id = user.id;
     res.redirect("/urls");
   } else {

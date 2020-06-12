@@ -37,19 +37,9 @@ httpConverter = function (longURL) {
   return longURL;
 };
 
-const authenticateUser = (email, password) => {
-  const user = getUserByEmail(email, users);
-  if (user && bcrypt.compareSync(password, user.password)) {
-    return user;
-  } else {
-    return false;
-  }
-};
-
 module.exports = {
   getUserByEmail,
   generateRandomString,
   urlForUser,
   httpConverter,
-  authenticateUser,
 };
