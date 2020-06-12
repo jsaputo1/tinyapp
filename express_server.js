@@ -71,7 +71,7 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const userCookie = req.session.user_id;
   let templateVars = {
-    username: userCookie,
+    username: users[userCookie],
     urls: urlDatabase,
   };
   if (templateVars.username) {
