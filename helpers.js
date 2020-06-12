@@ -27,11 +27,11 @@ const urlForUser = (userID, database) => {
 httpConverter = function (longURL) {
   const http = "http://";
   const https = "https://";
-  longUrlStart = longURL.substring(7, 0);
-  longURL.toLowerCase();
-  if (longURL.startsWith(https)) {
+  longUrlStart = longURL.substring(8, 0);
+  longUrlStartLowerCase = longUrlStart.toLowerCase();
+  if (longUrlStartLowerCase.startsWith(https)) {
     longURL = longURL;
-  } else if (!longURL.startsWith(http)) {
+  } else if (!longUrlStartLowerCase.startsWith(http)) {
     longURL = http + longURL;
   }
   longURL = longURL;
