@@ -10,6 +10,7 @@ const {
   generateRandomString,
   getUserByEmail,
   urlForUser,
+  httpConverter,
 } = require("./helpers");
 
 //bcrypt
@@ -123,31 +124,16 @@ app.get("/u/:shortURL", (req, res) => {
 
 //Create new URL
 app.post("/urls", (req, res) => {
-  const longURL = req.body.longURL.toLowerCase();
+  const longURL = httpConverter(req.body.longURL);
   const shortURL = generateRandomString();
   const userID = req.session.user_id;
-  const http = "http://";
-  const https = "https://";
 
-  if (longURL.startsWith(https)) {
-    urlDatabase[shortURL] = {
-      longURL: longURL,
-      userID: userID,
-      shortURL: shortURL,
-    };
-  } else if (!longURL.startsWith(http)) {
-    urlDatabase[shortURL] = {
-      longURL: `http://${longURL}`,
-      userID: userID,
-      shortURL: shortURL,
-    };
-  } else {
-    urlDatabase[shortURL] = {
-      longURL: longURL,
-      userID: userID,
-      shortURL: shortURL,
-    };
-  }
+  urlDatabase[shortURL] = {
+    longURL: longURL,
+    userID: userID,
+    shortURL: shortURL,
+  };
+
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -167,16 +153,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const username = req.session.user_id;
-  const http = "http://";
-  const https = "https://";
-  let longURL = req.body.longURL.toLowerCase();
-
-  if (longURL.startsWith(https)) {
-    longURL = longURL;
-  } else if (!longURL.startsWith(http)) {
-    longURL = "http://" + longURL;
-  }
-
+  const longURL = httpConverter(req.body.longURL);
   if (urlDatabase[shortURL].userID === username) {
     urlDatabase[shortURL].longURL = longURL;
     res.redirect("/urls");

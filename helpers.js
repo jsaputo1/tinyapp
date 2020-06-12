@@ -24,4 +24,23 @@ const urlForUser = (userID, database) => {
   return userURLs;
 };
 
-module.exports = { getUserByEmail, generateRandomString, urlForUser };
+httpConverter = function (longURL) {
+  const http = "http://";
+  const https = "https://";
+  longUrlStart = longURL.substring(7, 0);
+  longURL.toLowerCase();
+  if (longURL.startsWith(https)) {
+    longURL = longURL;
+  } else if (!longURL.startsWith(http)) {
+    longURL = http + longURL;
+  }
+  longURL = longURL;
+  return longURL;
+};
+
+module.exports = {
+  getUserByEmail,
+  generateRandomString,
+  urlForUser,
+  httpConverter,
+};
