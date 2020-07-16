@@ -1,6 +1,5 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const bcrypt = require("bcrypt");
 const app = express();
 const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
@@ -13,8 +12,6 @@ const {
   httpConverter,
 } = require("./helpers");
 
-//bcrypt
-const saltRounds = 10;
 
 //Databases
 const urlDatabase = {
@@ -26,12 +23,12 @@ const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password: bcrypt.hashSync("1234", saltRounds),
+    password: "password"
   },
   user2RandomID: {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: bcrypt.hashSync("1234", saltRounds),
+    password: "password",
   },
 };
 
@@ -165,7 +162,7 @@ app.post("/urls/:shortURL", (req, res) => {
 // Login
 app.post("/login", (req, res) => {
   const user = getUserByEmail(req.body.email, users);
-  if (user && bcrypt.compareSync(req.body.password, user.password)) {
+  if (user && req.body.password === user.password) {
     req.session.user_id = user.id;
     res.redirect("/urls");
   } else {
@@ -195,7 +192,7 @@ app.post("/register", (req, res) => {
   users[id] = {
     id: id,
     email: email,
-    password: bcrypt.hashSync(password, saltRounds),
+    password: password
   };
   req.session.user_id = users[id].id;
   res.redirect("/urls");
